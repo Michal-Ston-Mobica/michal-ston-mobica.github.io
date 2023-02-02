@@ -700,10 +700,10 @@ function updateGlobalBufferAndViews(buf) {
   Module['HEAPF64'] = HEAPF64 = new Float64Array(buf);
 }
 
-var STACK_SIZE = 268435456;
+var STACK_SIZE = 536870912;
 if (Module['STACK_SIZE']) assert(STACK_SIZE === Module['STACK_SIZE'], 'the stack size can no longer be determined at runtime')
 
-var INITIAL_MEMORY = Module['INITIAL_MEMORY'] || 536870912;legacyModuleProp('INITIAL_MEMORY', 'INITIAL_MEMORY');
+var INITIAL_MEMORY = Module['INITIAL_MEMORY'] || 1073741824;legacyModuleProp('INITIAL_MEMORY', 'INITIAL_MEMORY');
 
 assert(INITIAL_MEMORY >= STACK_SIZE, 'INITIAL_MEMORY should be larger than STACK_SIZE, was ' + INITIAL_MEMORY + '! (STACK_SIZE=' + STACK_SIZE + ')');
 
@@ -713,7 +713,7 @@ assert(typeof Int32Array != 'undefined' && typeof Float64Array !== 'undefined' &
 
 // If memory is defined in wasm, the user can't provide it.
 assert(!Module['wasmMemory'], 'Use of `wasmMemory` detected.  Use -sIMPORTED_MEMORY to define wasmMemory externally');
-assert(INITIAL_MEMORY == 536870912, 'Detected runtime INITIAL_MEMORY setting.  Use -sIMPORTED_MEMORY to define wasmMemory dynamically');
+assert(INITIAL_MEMORY == 1073741824, 'Detected runtime INITIAL_MEMORY setting.  Use -sIMPORTED_MEMORY to define wasmMemory dynamically');
 
 // include: runtime_init_table.js
 // In regular non-RELOCATABLE mode the table is exported
@@ -1109,7 +1109,7 @@ function createWasm() {
     // This assertion doesn't hold when emscripten is run in --post-link
     // mode.
     // TODO(sbc): Read INITIAL_MEMORY out of the wasm file in post-link mode.
-    //assert(wasmMemory.buffer.byteLength === 536870912);
+    //assert(wasmMemory.buffer.byteLength === 1073741824);
     updateGlobalBufferAndViews(wasmMemory.buffer);
 
     wasmTable = Module['asm']['__indirect_function_table'];
@@ -1219,9 +1219,13 @@ var tempI64;
 var ASM_CONSTS = {
   
 };
-function upload(accept_types,callback,nullptr) { globalThis.open_file = function(e) { const file_reader = new FileReader(); file_reader.addEventListener("loadend",function(){ const uint8Arr = new Uint8Array(event.target.result); const num_bytes = uint8Arr.length * uint8Arr.BYTES_PER_ELEMENT; const data_ptr = Module._malloc(num_bytes); const data_on_heap = new Uint8Array(Module.HEAPU8.buffer, data_ptr, num_bytes); data_on_heap.set(uint8Arr); var callback_data = callback_data || 0; const res = Module.ccall('load_file_return', 'number', ['string', 'string', 'number', 'number', 'number', 'number'], [event.target.filename, event.target.mime_type, data_on_heap.byteOffset, uint8Arr.length, callback, callback_data]); Module._free(data_ptr); }); file_reader.filename = e.target.files[0].name; file_reader.mime_type = e.target.files[0].type; file_reader.readAsArrayBuffer(e.target.files[0]); }; var file_selector = document.createElement('input'); file_selector.setAttribute('type', 'file'); file_selector.setAttribute('onchange', 'open_file(event)'); file_selector.setAttribute('accept', UTF8ToString(accept_types)); file_selector.click(); }
+function upload(accept_types,callback,callback_data) { globalThis.open_file = function(e) { const file_reader = new FileReader(); file_reader.addEventListener("loadend",function(){ const uint8Arr = new Uint8Array(event.target.result); const num_bytes = uint8Arr.length * uint8Arr.BYTES_PER_ELEMENT; const data_ptr = Module._malloc(num_bytes); const data_on_heap = new Uint8Array(Module.HEAPU8.buffer, data_ptr, num_bytes); data_on_heap.set(uint8Arr); var callback_data = callback_data || 0; const res = Module.ccall('load_file_return', 'number', ['string', 'string', 'number', 'number', 'number', 'number'], [event.target.filename, event.target.mime_type, data_on_heap.byteOffset, uint8Arr.length, callback, callback_data]); Module._free(data_ptr); }); file_reader.filename = e.target.files[0].name; file_reader.mime_type = e.target.files[0].type; file_reader.readAsArrayBuffer(e.target.files[0]); }; var file_selector = document.createElement('input'); file_selector.setAttribute('type', 'file'); file_selector.setAttribute('onchange', 'open_file(event)'); file_selector.setAttribute('accept', UTF8ToString(accept_types)); file_selector.click(); }
 function download(filename,mime_type,buffer,buffer_size) { var a = document.createElement('a'); a.download = UTF8ToString(filename); a.href = URL.createObjectURL(new Blob([new Uint8Array(Module.HEAPU8.buffer, buffer, buffer_size)], {type: UTF8ToString(mime_type)})); a.click(); }
 function down(filename) { var a = document.createElement('a'); a.download = UTF8ToString(filename); a.href = URL.createObjectURL(new Blob([FS.readFile(UTF8ToString(filename)).buffer], {type: "application/octet-stream"})); a.click(); }
+function ui_innerhtml_int(id,value) { var elem = document.getElementById(UTF8ToString(id)); elem.innerHTML=UTF8ToString(value); }
+function ui_setattr_int(id,attr,value) { var elem = document.getElementById(UTF8ToString(id)); elem.setAttribute(UTF8ToString(attr),UTF8ToString(value)); }
+function ui_remattr_int(id,attr) { var elem = document.getElementById(UTF8ToString(id)); elem.removeAttribute(UTF8ToString(attr)); }
+function ui_progbar_update_int(id,value) { var elem = document.getElementById(UTF8ToString(id)); var curr = elem.getAttribute("value"); elem.setAttribute("value",''+(Number(curr)+value)); }
 
 
 
@@ -5022,7 +5026,7 @@ function down(filename) { var a = document.createElement('a'); a.download = UTF8
           })(x);
         }
         return ret;
-      },State:{Normal:0,Unwinding:1,Rewinding:2,Disabled:3},state:0,StackSize:4096,currData:null,handleSleepReturnValue:0,exportCallStack:[],callStackNameToId:{},callStackIdToName:{},callStackId:0,asyncPromiseHandlers:null,sleepCallbacks:[],getCallStackId:function(funcName) {
+      },State:{Normal:0,Unwinding:1,Rewinding:2,Disabled:3},state:0,StackSize:65565,currData:null,handleSleepReturnValue:0,exportCallStack:[],callStackNameToId:{},callStackIdToName:{},callStackId:0,asyncPromiseHandlers:null,sleepCallbacks:[],getCallStackId:function(funcName) {
         var id = Asyncify.callStackNameToId[funcName];
         if (id === undefined) {
           id = Asyncify.callStackId++;
@@ -5503,6 +5507,10 @@ var asmLibraryArg = {
   "fd_write": _fd_write,
   "strftime_l": _strftime_l,
   "system": _system,
+  "ui_innerhtml_int": ui_innerhtml_int,
+  "ui_progbar_update_int": ui_progbar_update_int,
+  "ui_remattr_int": ui_remattr_int,
+  "ui_setattr_int": ui_setattr_int,
   "upload": upload
 };
 Asyncify.instrumentWasmImports(asmLibraryArg);
@@ -5515,6 +5523,9 @@ var _main = Module["_main"] = createExportWrapper("__main_argc_argv");
 
 /** @type {function(...*):?} */
 var _load_file_return = Module["_load_file_return"] = createExportWrapper("load_file_return");
+
+/** @type {function(...*):?} */
+var _ui_extract = Module["_ui_extract"] = createExportWrapper("ui_extract");
 
 /** @type {function(...*):?} */
 var _free = Module["_free"] = createExportWrapper("free");
@@ -5684,8 +5695,8 @@ var _asyncify_start_rewind = Module["_asyncify_start_rewind"] = createExportWrap
 /** @type {function(...*):?} */
 var _asyncify_stop_rewind = Module["_asyncify_stop_rewind"] = createExportWrapper("asyncify_stop_rewind");
 
-var ___start_em_js = Module['___start_em_js'] = 268533172;
-var ___stop_em_js = Module['___stop_em_js'] = 268534903;
+var ___start_em_js = Module['___start_em_js'] = 536960164;
+var ___stop_em_js = Module['___stop_em_js'] = 536962515;
 
 
 
